@@ -50,4 +50,10 @@ public class BoardController {
         service.remove(id);
     }
 
+
+    @PutMapping("edit")
+    public void edit(@RequestBody Board board) {
+        service.edit(board);
+    }
+
 }
