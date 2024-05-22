@@ -14,8 +14,15 @@ public class MemberController {
     final MemberService service;
 
     @PostMapping("signup")
-    public void signup(@RequestBody Member member) {
-        service.add(member);
+    public ResponseEntity signup(@RequestBody Member member) {
+        if (service.validate(member)) {
+
+            service.add(member);
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
 
@@ -31,7 +38,13 @@ public class MemberController {
     }
 
     @GetMapping(value = "check", params = "nickName")
-    public void checkNickName(@RequestParam("nickName") String nickName) {
+    public ResponseEntity checkNickName(@RequestParam("nickName") String nickName) {
         System.out.println(nickName);
+        Member member = service.getByNickName(nickName);
+        if (member == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(nickName);
+
     }
 }
