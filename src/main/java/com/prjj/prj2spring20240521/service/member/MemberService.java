@@ -58,4 +58,17 @@ public class MemberService {
     public Member getById(Integer id) {
         return mapper.selectById(id);
     }
+
+    public void remove(Integer id) {
+        mapper.deleteById(id);
+    }
+
+    public boolean hasAccess(Member member) {
+        Member dbMember = mapper.selectById(member.getId());
+
+        if (dbMember == null) {
+            return false;
+        }
+        return passwordEncoder.matches(member.getPassword(), dbMember.getPassword());
+    }
 }
