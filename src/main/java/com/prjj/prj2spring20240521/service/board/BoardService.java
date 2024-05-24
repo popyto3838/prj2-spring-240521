@@ -1,7 +1,6 @@
 package com.prjj.prj2spring20240521.service.board;
 
 import com.prjj.prj2spring20240521.domain.board.Board;
-import com.prjj.prj2spring20240521.domain.member.Member;
 import com.prjj.prj2spring20240521.mapper.board.BoardMapper;
 import com.prjj.prj2spring20240521.mapper.member.MemberMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +18,7 @@ public class BoardService {
     private final MemberMapper memberMapper;
 
     public void add(Board board, Authentication authentication) {
-        Member member = memberMapper.selectByEmail(authentication.getName());
-        board.setMemberId(member.getId());
+        board.setMemberId(Integer.valueOf(authentication.getName()));
         mapper.insert(board);
     }
 
