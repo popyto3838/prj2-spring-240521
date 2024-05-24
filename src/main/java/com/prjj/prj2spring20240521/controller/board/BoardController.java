@@ -3,6 +3,7 @@ package com.prjj.prj2spring20240521.controller.board;
 import com.prjj.prj2spring20240521.domain.board.Board;
 import com.prjj.prj2spring20240521.service.board.BoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,13 +23,11 @@ public class BoardController {
     public ResponseEntity add(
             Authentication authentication,
             @RequestBody Board board) {
-
         if (service.validate(board)) {
             service.add(board, authentication);
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.badRequest().build();
-
         }
     }
 
@@ -46,14 +45,20 @@ public class BoardController {
         if (board == null) {
             return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok().body(board);
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id) {
-        service.remove(id);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity delete(@PathVariable Integer id
+            , Authentication authentication) {
+        if (service.hasAccess(id, authentication)) {
+            service.remove(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
-
 
     @PutMapping("edit")
     public ResponseEntity edit(@RequestBody Board board) {
@@ -62,9 +67,7 @@ public class BoardController {
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.badRequest().build();
-
         }
-
     }
-
 }
+

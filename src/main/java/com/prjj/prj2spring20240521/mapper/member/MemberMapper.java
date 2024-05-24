@@ -9,45 +9,51 @@ import java.util.List;
 public interface MemberMapper {
 
     @Insert("""
-            INSERT INTO member (email, password, member_id)
-            VALUES (#{email}, #{password}, #{memberId})
+            INSERT INTO member (email, password, nick_name)
+            VALUES (#{email}, #{password}, #{nickName})
             """)
     public int insert(Member member);
 
     @Select("""
-            SELECT*
+            SELECT *
             FROM member
             WHERE email = #{email}
             """)
     Member selectByEmail(String email);
 
     @Select("""
-            SELECT*
+            SELECT *
             FROM member
             WHERE nick_name = #{nickName}
             """)
     Member selectByNickName(String nickName);
 
     @Select("""
-            SELECT id, email, nick_name, inserted
+            SELECT id,
+                   email,
+                   nick_name,
+                   inserted
             FROM member
-            ORDER BY id DESC
+            ORDER BY id ASC 
             """)
-    List<Member> selectList();
+    List<Member> selectAll();
 
     @Select("""
-            SELECT id, email, nick_name, inserted, password
+            SELECT id,
+                   email,
+                   password,
+                   nick_name,
+                   inserted
             FROM member
             WHERE id = #{id}
             """)
     Member selectById(Integer id);
 
-
     @Delete("""
             DELETE FROM member
             WHERE id = #{id}
             """)
-    void deleteById(Integer id);
+    int deleteById(Integer id);
 
     @Update("""
             UPDATE member 
@@ -57,4 +63,12 @@ public interface MemberMapper {
             WHERE id = #{id}
             """)
     int update(Member member);
+
+    @Select("""
+            SELECT name
+            FROM authority
+            WHERE member_id = #{memberId}
+                       
+            """)
+    List<String> selectAuthorityByMemberId(Integer memberId);
 }

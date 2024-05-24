@@ -22,46 +22,43 @@ public class MemberController {
     @PostMapping("signup")
     public ResponseEntity signup(@RequestBody Member member) {
         if (service.validate(member)) {
-
             service.add(member);
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.badRequest().build();
         }
-
     }
-
 
     @GetMapping(value = "check", params = "email")
     public ResponseEntity checkEmail(@RequestParam("email") String email) {
-        System.out.println(email);
         Member member = service.getByEmail(email);
         if (member == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(email);
-
     }
 
     @GetMapping(value = "check", params = "nickName")
     public ResponseEntity checkNickName(@RequestParam("nickName") String nickName) {
-        System.out.println(nickName);
         Member member = service.getByNickName(nickName);
         if (member == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(nickName);
-
     }
 
     @GetMapping("list")
     public List<Member> list() {
         return service.list();
-
     }
 
     @GetMapping("{id}")
-    public ResponseEntity get(@PathVariable Integer id) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity get(@PathVariable Integer id,
+                              Authentication authentication) {
+        if (!service.hasAccess(id, authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         Member member = service.getById(id);
         if (member == null) {
@@ -73,18 +70,20 @@ public class MemberController {
 
     @DeleteMapping("{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity delete(@RequestBody Member member, Authentication authentication) {
+    public ResponseEntity delete(
+            @RequestBody Member member,
+            Authentication authentication) {
         if (service.hasAccess(member, authentication)) {
             service.remove(member.getId());
             return ResponseEntity.ok().build();
         }
+
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     @PutMapping("modify")
-    public ResponseEntity modify(@RequestBody Member member) {
-        if (service.hasAccessModify(member)) {
-
+    public ResponseEntity modify(@RequestBody Member member, Authentication authentication) {
+        if (service.hasAccessModify(member, authentication)) {
             service.modify(member);
             return ResponseEntity.ok().build();
         } else {
@@ -95,9 +94,11 @@ public class MemberController {
     @PostMapping("token")
     public ResponseEntity token(@RequestBody Member member) {
         Map<String, Object> map = service.getToken(member);
+
         if (map == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
         return ResponseEntity.ok(map);
     }
 }
