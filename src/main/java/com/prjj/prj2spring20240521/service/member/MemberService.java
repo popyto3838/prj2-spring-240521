@@ -6,6 +6,7 @@ import com.prjj.prj2spring20240521.mapper.member.MemberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -97,7 +99,7 @@ public class MemberService {
     }
 
 
-    public void modify(Member member) {
+    public Map<String, Object> modify(Member member, Authentication authentication) {
         if (member.getPassword() != null && member.getPassword().length() > 0) {
             // 패스워드가 입력되었으니 바꾸기
             member.setPassword(passwordEncoder.encode(member.getPassword()));
@@ -107,12 +109,25 @@ public class MemberService {
             member.setPassword(dbMember.getPassword());
         }
         mapper.update(member);
+
+        String token = "";
+
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Map<String, Object> claims = jwt.getClaims();
+        JwtClaimsSet.Builder jwtClaimsSetBuilder = JwtClaimsSet.builder();
+        claims.forEach(jwtClaimsSetBuilder::claim);
+        jwtClaimsSetBuilder.claim("nickName", member.getNickName());
+
+        JwtClaimsSet jwtClaimsSet = jwtClaimsSetBuilder.build();
+        token = jwtEncoder.encode(JwtEncoderParameters.from(jwtClaimsSet)).getTokenValue();
+        return Map.of("token", token);
     }
 
     public boolean hasAccessModify(Member member, Authentication authentication) {
         if (!authentication.getName().equals(member.getId().toString())) {
             return false;
         }
+
         Member dbMember = mapper.selectById(member.getId());
         if (dbMember == null) {
             return false;
@@ -139,7 +154,8 @@ public class MemberService {
 
                 List<String> authority = mapper.selectAuthorityByMemberId(db.getId());
 
-                String authorityString = authority.stream().collect(Collectors.joining(" "));
+                String authorityString = authority.stream()
+                        .collect(Collectors.joining(" "));
 
                 // https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/jwt/login/src/main/java/example/web/TokenController.java
                 JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -147,7 +163,7 @@ public class MemberService {
                         .issuedAt(now)
                         .expiresAt(now.plusSeconds(60 * 60 * 24 * 7))
                         .subject(db.getId().toString())
-                        .claim("scope", "authority") // 권한
+                        .claim("scope", authorityString) // 권한
                         .claim("nickName", db.getNickName())
                         .build();
 
@@ -161,6 +177,12 @@ public class MemberService {
     }
 
     public boolean hasAccess(Integer id, Authentication authentication) {
-        return authentication.getName().equals(id.toString());
+        boolean self = authentication.getName().equals(id.toString());
+
+        boolean isAdmin = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("SCOPE_admin"));
+
+        return self || isAdmin;
     }
 }

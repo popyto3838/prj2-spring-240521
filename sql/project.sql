@@ -68,6 +68,8 @@ CREATE TABLE authority
 INSERT INTO authority (member_id, name)
 VALUES (19, 'admin');
 
+SELECT *
+FROM authority
 
 
 

@@ -48,6 +48,7 @@ public class MemberController {
     }
 
     @GetMapping("list")
+    @PreAuthorize("hasAuthority('SCOPE_admin')")
     public List<Member> list() {
         return service.list();
     }
@@ -82,10 +83,12 @@ public class MemberController {
     }
 
     @PutMapping("modify")
-    public ResponseEntity modify(@RequestBody Member member, Authentication authentication) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity modify(@RequestBody Member member,
+                                 Authentication authentication) {
         if (service.hasAccessModify(member, authentication)) {
-            service.modify(member);
-            return ResponseEntity.ok().build();
+            Map<String, Object> result = service.modify(member, authentication);
+            return ResponseEntity.ok(result);
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

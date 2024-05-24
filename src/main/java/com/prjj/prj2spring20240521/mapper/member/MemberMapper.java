@@ -68,7 +68,6 @@ public interface MemberMapper {
             SELECT name
             FROM authority
             WHERE member_id = #{memberId}
-                       
             """)
     List<String> selectAuthorityByMemberId(Integer memberId);
 }
