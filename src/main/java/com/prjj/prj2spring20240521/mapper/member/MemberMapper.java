@@ -1,10 +1,7 @@
 package com.prjj.prj2spring20240521.mapper.member;
 
 import com.prjj.prj2spring20240521.domain.member.Member;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -12,8 +9,8 @@ import java.util.List;
 public interface MemberMapper {
 
     @Insert("""
-            INSERT INTO member (email, password, nick_name)
-            VALUES (#{email}, #{password}, #{nickName})
+            INSERT INTO member (email, password, member_id)
+            VALUES (#{email}, #{password}, #{memberId})
             """)
     public int insert(Member member);
 
@@ -39,7 +36,7 @@ public interface MemberMapper {
     List<Member> selectList();
 
     @Select("""
-            SELECT id, email, nick_name, inserted
+            SELECT id, email, nick_name, inserted, password
             FROM member
             WHERE id = #{id}
             """)
@@ -51,4 +48,13 @@ public interface MemberMapper {
             WHERE id = #{id}
             """)
     void deleteById(Integer id);
+
+    @Update("""
+            UPDATE member 
+            SET
+                password = #{password},
+                nick_name = #{nickName}
+            WHERE id = #{id}
+            """)
+    int update(Member member);
 }
